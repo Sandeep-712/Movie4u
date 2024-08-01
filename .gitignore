@@ -26,9 +26,10 @@ dist-ssr
 
 
 
-/backend/.venv
-/backend/__pycache__
-/backend/*.pyc
-/backend/*.pkl
-/backend/.idea
-/backend/.ipynb_checkpoints
+/Backend/myenv
+/Backend/__pycache__
+/Backend/*.pyc
+/Backend/*.pkl
+/Backend/.idea
+/Backend/.ipynb_checkpoints
+/Backend/.env
