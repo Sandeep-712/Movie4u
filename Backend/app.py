@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import requests
 import ast
-from flask import Flask, render_template,redirect,url_for, request
+from flask import Flask, jsonify, render_template,redirect,url_for, request
 from flask_cors import CORS, cross_origin
 import operator
 
@@ -26,12 +26,12 @@ def db_connection():
 
 
 
-dataset = pickle.load(open('./model/data/dataset.pkl', 'rb'))
+dataset = pickle.load(open('dataset.pkl', 'rb'))
 movies = pd.DataFrame(dataset)
 
-similarity = pickle.load(open('./model/data/similarity.pkl', 'rb'))
-popular = pickle.load(open('./model/data/popular.pkl', 'rb'))
-select = pickle.load(open('./model/data/select.pkl', 'rb'))
+similarity = pickle.load(open('similarity.pkl', 'rb'))
+popular = pickle.load(open('popular.pkl', 'rb'))
+select = pickle.load(open('select.pkl', 'rb'))
 
 
 @app.route('/')
@@ -42,7 +42,7 @@ def index():
 signup_email=""
 signup_password=""
 
-@app.route('/signup',method=['GET','POST'])
+@app.route('/signup',methods=['GET','POST'])
 def signup():
     global signup_email
     global signup_password
