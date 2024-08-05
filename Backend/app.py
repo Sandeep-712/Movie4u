@@ -2,7 +2,6 @@
 import pickle
 import _mysql_connector
 import mysql
-import numpy as np
 import pandas as pd
 import requests
 import ast
@@ -11,6 +10,7 @@ from flask_cors import CORS, cross_origin
 import operator
 
 app = Flask(__name__)
+CORS(app)
 
 def db_connection():
     conn=None
@@ -33,12 +33,14 @@ similarity = pickle.load(open('similarity.pkl', 'rb'))
 popular = pickle.load(open('popular.pkl', 'rb'))
 select = pickle.load(open('select.pkl', 'rb'))
 
-
+# Home route
 @app.route('/')
 def index():
     return render_template('index.html')
 
 
+
+# Authentication route
 signup_email=""
 signup_password=""
 
@@ -92,6 +94,8 @@ def signin():
     return response    
 
 
+
+# Choices route
 @app.route('/choices', methods=['GET','POST'])
 def choices():
 
@@ -118,7 +122,10 @@ def choices():
         else:
             break
 
-    return render_template("choices.html", genre_names=genre_names, cast_names=cast_names)
+    return jsonify({'genre_names':genre_names,'cast_names':cast_names})
+
+
+
 
 
 movie_names = movies['title'].values
@@ -271,19 +278,21 @@ def getByYear():
     return response
 
 
-@app.route('/recommendations', methods=['POST', 'GET'])
+@app.route('/recommendations', methods=[ 'GET','POST'])
 def recommendations():
     genre_movies, genre_posters = byGenre("Action")
-    year_movies, year_posters = byYear("2016")
-    genreList = request.form.getlist('genre-checkbox')
-    castList = request.form.getlist('cast-checkbox')
-    selected_genres = []
-    for i in genreList:
-        selected_genres.append(i.replace("-", " "))
-    selected_cast = []
-    for i in castList:
-        selected_cast.append(i.replace("-", " "))
+    year_movies, year_posters = byYear("2020")
+
+    # fetch user selected genre and cast
+    genreList = request.get_json('genreList')
+    castList = request.get_json('castList')
+
+    # convert string to list
+    selected_genres = [genre.replace("-", " ") for genre in genreList]
+    selected_cast = [cast.replace("-", " ") for cast in castList]
+
     choice_movies = byChoice(selected_genres, selected_cast, select)
+
     choice_idx = []
     choice_posters=[]
     for mov in choice_movies:
@@ -291,8 +300,16 @@ def recommendations():
         choice_idx.append(movie_idx)
         movie_id = movies.iloc[movie_idx].movie_id
         choice_posters.append(fetchPoster(movie_id))
-    return render_template("recommendations.html", movie_names=movie_names, genre_movies=genre_movies, year_movies=year_movies, genre_posters=genre_posters, year_posters=year_posters, choice_idx=choice_idx, movies=movies, choice_posters=choice_posters)
 
+    return jsonify({
+        'genre_movies': genre_movies,
+        'year_movies': year_movies,
+        'genre_posters': genre_posters,
+        'year_posters': year_posters,
+        'choice_idx': choice_idx,
+        'choice_posters': choice_posters,
+        'movie_names': movie_names,
+    })
 
 if __name__ == "__main__":
     app.run()

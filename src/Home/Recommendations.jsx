@@ -1,19 +1,56 @@
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { useLocation } from "react-router-dom";
 
 
+const Recommendations = () => {
 
-function Recommendations() {
-
-    const [selectedGenre, setSelectedGenre] = useState('Action');
     const [genreMovies, setGenreMovies] = useState([]);
     const [genrePosters, setGenrePosters] = useState([]);
-    const [selectedYear, setSelectedYear] = useState('2016');
     const [yearMovies, setYearMovies] = useState([]);
     const [yearPosters, setYearPosters] = useState([]);
+    const [choiceIdx, setChoiceIdx] = useState([]);
+    const [choicePosters, setChoicePosters] = useState([]);
+    const [movies, setMovies] = useState([]);
+    const location = useLocation();
+
+    const [selectedGenre, setSelectedGenre] = useState('Action');
+    const [selectedYear, setSelectedYear] = useState('2016');
 
 
     const genres = ['Action', 'Family', 'Comedy', 'Horror', 'Romance', 'Animation', 'Drama'];
-    const years = ['2016', '2015', '2014', '2013', '2012'];
+    const years = ['2023', '2022', '2021', '2020', '2019', '2018', '2017'];
+
+    const genreList = useMemo(() => location.state?.genreList || [], [location.state]);
+    const castList =useMemo(() => location.state?.castList || [],[location.state]);
+
+
+    useEffect(() => {
+        const fetchRecommendations = async () => {
+            const url = 'http://127.0.0.1:5000/recommendations';
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ genreList, castList }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setGenreMovies(data.genre_movies);
+                setGenrePosters(data.genre_posters);
+                setYearMovies(data.year_movies);
+                setYearPosters(data.year_posters);
+                setChoiceIdx(data.choice_idx);
+                setChoicePosters(data.choice_posters);
+                setMovies(data.movie_names);
+            } else {
+                console.error('Failed to fetch recommendations');
+            }
+        };
+
+        fetchRecommendations();
+    }, [genreList, castList]);
 
 
     const genreSelected = async (genre) => {
@@ -46,6 +83,7 @@ function Recommendations() {
         setYearMovies(data[0].year_movies);
         setYearPosters(data[1].year_posters);
     };
+
 
 
     return (

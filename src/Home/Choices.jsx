@@ -1,10 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import './Choices.css';
+import { useNavigate } from 'react-router-dom';
 
-
-// eslint-disable-next-line react/prop-types
-const Choices = ({ genreNames, castNames }) => {
+const Choices = () => {
     const [selectedGenres, setSelectedGenres] = useState([]);
     const [selectedCasts, setSelectedCasts] = useState([]);
+    const [genreName, setgenreName] = useState([]);
+    const [castName, setcastName] = useState([]);
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Fetch data from Flask backend
+        const fetchData = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/choices');
+                const data = await response.json();
+                setgenreName(data.genre_names);
+                setcastName(data.cast_names);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleGenreChange = (e) => {
         const { value, checked } = e.target;
@@ -37,24 +56,25 @@ const Choices = ({ genreNames, castNames }) => {
     };
 
     const handleSubmit = (e) => {
+        e.preventDefault();
         if (selectedGenres.length !== 3 && selectedCasts.length !== 5) {
             alert('Please select 3 genres and 5 casts.');
-            e.preventDefault();
+            return;
         }
+        navigate('/recommendations', { state: { genreList: selectedGenres, castList: selectedCasts } });
     }
 
 
 
     return (
         <div className="container">
-            <form action="/recommendation" method="POST" id="choice-form" onSubmit={handleSubmit}>
+            <form  id="choice-form" onSubmit={handleSubmit}>
                 <div className="select-heading">
                     <h2>Select your top 3 Genres</h2>
                 </div>
                 <div className="row">
                     <ul className="select-list">
-                        {/* eslint-disable-next-line react/prop-types */}
-                        {genreNames.map((genre, index) => (
+                        {genreName.map((genre, index) => (
                             <div className="col" key={`genre-${index}`}>
                                 <li>
                                     <label>
@@ -83,8 +103,7 @@ const Choices = ({ genreNames, castNames }) => {
                 </div>
                 <div className="row">
                     <ul className="select-list">
-                        {/* eslint-disable-next-line react/prop-types */}
-                        {castNames.map((cast, index) => (
+                        {castName.map((cast, index) => (
                             <div className="col" key={`cast-${index}`}>
                                 <li>
                                     <label>
