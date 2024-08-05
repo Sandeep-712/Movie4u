@@ -1,30 +1,15 @@
-
 import pickle
-import _mysql_connector
-import mysql
+import numpy as np
 import pandas as pd
 import requests
+import flask
 import ast
-from flask import Flask, jsonify, render_template,redirect,url_for, request
+from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS, cross_origin
 import operator
 
 app = Flask(__name__)
 CORS(app)
-
-def db_connection():
-    conn=None
-    try:
-        conn= mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="123456789",
-    database="users")
-    except mysql.Error as e:
-        print(e)
-    return conn
-
-
 
 dataset = pickle.load(open('dataset.pkl', 'rb'))
 movies = pd.DataFrame(dataset)
@@ -33,118 +18,30 @@ similarity = pickle.load(open('similarity.pkl', 'rb'))
 popular = pickle.load(open('popular.pkl', 'rb'))
 select = pickle.load(open('select.pkl', 'rb'))
 
-# Home route
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-
-# Authentication route
-signup_email=""
-signup_password=""
-
-@app.route('/signup',methods=['GET','POST'])
-def signup():
-    global signup_email
-    global signup_password
-    response =render_template('signup.html')
-
-    if request.method=='Post':
-        conn=db_connection()
-        cursor=conn.cursor()
-
-        signup_email=request.form["email"]
-        signup_password=request.form["password"]
-
-        sql_query="Select email from users where email ='"+signup_email+"'"
-        cursor.execute(sql_query)
-        results=cursor.fetchball()
-    
-        if len(results) !=0:
-            response="this email is already registred. <br> Please sign-in."
-        else:
-            response="Choices"
-    return response
-
-signin_email=""
-@app.route('/signin',methods=['GET','POST'])
-def signin():
-    global signin_email
-    response=render_template('signin.html')
-
-    if request.method == 'POST':
-        conn = db_connection()
-        cursor = conn.cursor()
-
-        signin_email = request.form["email"]
-        password = request.form["password"]
-
-        sql_query = "Select email, password from users where email= '"+signin_email+"'"
-        cursor.execute(sql_query)
-        results = cursor.fetchall()
-
-        if len(results) == 0:
-            response = "This email is not registered. <br> Please sign-up first."
-        elif password != results[0][1]:
-                response = "Incorrect Password."
-        elif password == results[0][1]:
-            response = "recommendations"
-
-    return response    
-
-
-
-# Choices route
-@app.route('/choices', methods=['GET','POST'])
-def choices():
-
-    genre_names = []
-    for i in movies['genres']:
-        for gen in i:
-            if gen not in genre_names:
-                genre_names.append(gen)
-
-    cast_dict = {}
-    for row in movies.iterrows():
-        for cast in row[1].cast:
-            if cast in cast_dict:
-                cast_dict[cast] = (cast_dict[cast] + 1)
-            else:
-                cast_dict[cast] = 0
-    cast_dict = dict(sorted(cast_dict.items(), key=operator.itemgetter(1), reverse=True))
-    cast_names = []
-    counter = 0
-    for key in cast_dict:
-        if counter < 25:
-            cast_names.append(key)
-            counter += 1
-        else:
-            break
-
-    return jsonify({'genre_names':genre_names,'cast_names':cast_names})
-
-
-
-
-
 movie_names = movies['title'].values
 
+genre_names = []
+for i in movies['genres']:
+    for gen in i:
+        if gen not in genre_names:
+            genre_names.append(gen)
 
-def fetchTrailer(movie_id):
-    response = requests.get(
-        'https://api.themoviedb.org/3/movie/{}/videos?api_key=0316a4c9c8d9cb18dc392405501d5698&language=en-US'.format(
-            movie_id))
-    data = response.json()
-    for vid in data['results']:
-        if vid['name'].find("Trailer") != -1:
-            return vid['key']
-
-
-def fetchPoster(movie_id):
-    movie_index = movies[movies['movie_id'] == movie_id].index[0]
-    poster = movies.iloc[movie_index].poster_path
-    return poster
+cast_dict = {}
+for row in movies.iterrows():
+    for cast in row[1].cast:
+        if cast in cast_dict:
+            cast_dict[cast] = (cast_dict[cast] + 1)
+        else:
+            cast_dict[cast] = 0
+cast_dict = dict(sorted(cast_dict.items(), key=operator.itemgetter(1), reverse=True))
+cast_names = []
+counter = 0
+for key in cast_dict:
+    if counter < 25:
+        cast_names.append(key)
+        counter += 1
+    else:
+        break
 
 def byChoice(genres, castList, obj):
     choice = obj.copy()
@@ -189,10 +86,52 @@ def byChoice(genres, castList, obj):
             break
     return choice_movies
 
+@app.route('/choices', methods=['GET','POST'])
+def choices():
+
+    genre_names = []
+    for i in movies['genres']:
+        for gen in i:
+            if gen not in genre_names:
+                genre_names.append(gen)
+
+    cast_dict = {}
+    for row in movies.iterrows():
+        for cast in row[1].cast:
+            if cast in cast_dict:
+                cast_dict[cast] = (cast_dict[cast] + 1)
+            else:
+                cast_dict[cast] = 0
+    cast_dict = dict(sorted(cast_dict.items(), key=operator.itemgetter(1), reverse=True))
+    cast_names = []
+    counter = 0
+    for key in cast_dict:
+        if counter < 25:
+            cast_names.append(key)
+            counter += 1
+        else:
+            break
+
+
+    return jsonify({'genre_names':genre_names,'cast_names':cast_names})
+
+
+def fetchTrailer(movie_id):
+    response = requests.get(
+        'https://api.themoviedb.org/3/movie/{}/videos?api_key=65669b357e1045d543ba072f7f533bce&language=en-US'.format(
+            movie_id))
+    data = response.json()
+    for vid in data['results']:
+        if vid['name'].find("Trailer") != -1:
+            return vid['key']
+
+def fetchPoster(movie_id):
+    movie_index = movies[movies['movie_id'] == movie_id].index[0]
+    poster = movies.iloc[movie_index].poster_path
+    return poster
 
 @app.route('/movie/<movie_name>')
 def movie(movie_name):
-
     def recommend(movie):
         movie_index = movies[movies['title'] == movie].index[0]
         distances = similarity[movie_index]
@@ -215,7 +154,6 @@ def movie(movie_name):
 
     return render_template("movie.html", movie_names=movie_names, movies=movies, movie_idx=movie_idx, recommendations=recommendations, posters=posters, trailer_key=trailer_key, movie_poster=movie_poster)
 
-
 def byGenre(genre):
     counter = 0
     genre_movies = []
@@ -237,7 +175,6 @@ def byGenre(genre):
 
     return genre_movies, genre_posters
 
-
 def byYear(year):
     counter = 0
     year_movies = []
@@ -257,60 +194,66 @@ def byYear(year):
 
     return year_movies, year_posters
 
-
-@app.route('/getByGenre', methods=['GET','POST'])
+@app.route('/getByGenre', methods=['POST','GET'])
 def getByGenre():
-    genre = request.form["genre"]
+    genre = request.json.get("genre")  # Using request.json.get to access the JSON data
+
+    if not genre:
+        return jsonify({"error": "Genre not provided"}), 
+    
     genre_movies, genre_posters = byGenre(genre)
-    response = jsonify(
-        {"genre_movies": genre_movies}, {"genre_posters": genre_posters}
-    )
-    return response
+    response = {
+        "genre_movies": genre_movies,
+        "genre_posters": genre_posters
+    }
+    return jsonify(response)
 
-
-@app.route('/getByYear', methods=['GET','POST'])
+@app.route('/getByYear', methods=['GET', 'POST'])
 def getByYear():
-    year = request.form["year"]
+    year = request.json.get("year")
+
+    if not year:
+        return jsonify({"error": "Year not provided"}),
+
     year_movies, year_posters = byYear(year)
-    response = jsonify(
-        {"year_movies": year_movies}, {"year_posters": year_posters}
-    )
-    return response
+    response = {
+        "year_movies": year_movies,
+        "year_posters": year_posters
+    }
+    return jsonify(response)
 
-
-@app.route('/recommendations', methods=[ 'GET','POST'])
+@app.route('/recommendations', methods=['POST', 'GET'])
 def recommendations():
     genre_movies, genre_posters = byGenre("Action")
-    year_movies, year_posters = byYear("2020")
+    year_movies, year_posters = byYear("2016")
 
-    # fetch user selected genre and cast
-    genreList = request.get_json('genreList')
-    castList = request.get_json('castList')
+    genreList = request.get_json().get('genreList', [])
+    castList = request.get_json().get('castList', [])
 
-    # convert string to list
-    selected_genres = [genre.replace("-", " ") for genre in genreList]
-    selected_cast = [cast.replace("-", " ") for cast in castList]
+    selected_genres = [i.replace("-", " ") for i in genreList]
+    selected_cast = [i.replace("-", " ") for i in castList]
 
     choice_movies = byChoice(selected_genres, selected_cast, select)
-
     choice_idx = []
-    choice_posters=[]
+    choice_posters = []
+
     for mov in choice_movies:
         movie_idx = movies[movies['title'] == mov].index[0]
-        choice_idx.append(movie_idx)
+        choice_idx.append(int(movie_idx))  # Ensure conversion to regular integer
         movie_id = movies.iloc[movie_idx].movie_id
         choice_posters.append(fetchPoster(movie_id))
 
-    return jsonify({
+    response = {
         'genre_movies': genre_movies,
         'year_movies': year_movies,
         'genre_posters': genre_posters,
         'year_posters': year_posters,
         'choice_idx': choice_idx,
         'choice_posters': choice_posters,
-        'movie_names': movie_names,
-    })
+        'movie_names': movie_names.tolist()  # Ensure conversion to list
+    }
+
+    return jsonify(response)
 
 if __name__ == "__main__":
     app.run()
-

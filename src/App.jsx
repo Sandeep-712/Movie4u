@@ -5,8 +5,7 @@ import Index from './Home/Index';
 // import Reset from './Auth/Reset'
 // import Signin from './Auth/Signin'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Recommendations from './Home/Recommendations';
-import { Suspense } from 'react';
+import Recommendation from './Home/Recommendations';
 
 function App() {
 
@@ -15,7 +14,7 @@ function App() {
       <Routes>
         <Route path='/' Component={Index} />
         <Route path='/choices' Component={Choices} />
-        <Route path='/recommendations' Component={<Suspense fallback={<div>Loading...</div>}><Recommendations /></Suspense>} />
+        <Route path='/recommendations' Component={Recommendation}/>
       </Routes>
     </Router>
   )

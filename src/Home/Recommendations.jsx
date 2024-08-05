@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
 import { useLocation } from "react-router-dom";
-
+import './Recommendation.css'
 
 const Recommendations = () => {
 
@@ -17,11 +17,9 @@ const Recommendations = () => {
     const [selectedYear, setSelectedYear] = useState('2016');
 
 
-    const genres = ['Action', 'Family', 'Comedy', 'Horror', 'Romance', 'Animation', 'Drama'];
-    const years = ['2023', '2022', '2021', '2020', '2019', '2018', '2017'];
 
-    const genreList = useMemo(() => location.state?.genreList || [], [location.state]);
-    const castList =useMemo(() => location.state?.castList || [],[location.state]);
+    const genreList = useMemo(() => location.state?.genreList, [location.state]);
+    const castList = useMemo(() => location.state?.castList, [location.state]);
 
 
     useEffect(() => {
@@ -44,6 +42,7 @@ const Recommendations = () => {
                 setChoiceIdx(data.choice_idx);
                 setChoicePosters(data.choice_posters);
                 setMovies(data.movie_names);
+                console.log(data);
             } else {
                 console.error('Failed to fetch recommendations');
             }
@@ -52,21 +51,33 @@ const Recommendations = () => {
         fetchRecommendations();
     }, [genreList, castList]);
 
+    const genres = ['Action', 'Family', 'Comedy', 'Horror', 'Romance', 'Animation', 'Drama'];
+    const years = ['2016', '2015', '2014', '2013', '2012'];
 
     const genreSelected = async (genre) => {
         setSelectedGenre(genre);
         const url = 'http://127.0.0.1:5000/getByGenre';
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ genre }),
-        })
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ genre }),
+            });
 
-        const data = await response.json();
-        setGenreMovies(data[0].genre_movies);
-        setGenrePosters(data[1].genre_posters);
+            if (!response.ok) {
+                throw new Error('Failed to fetch data');
+            }
+
+            const data = await response.json();
+            console.log(data);
+            setGenreMovies(data.genre_movies);
+            setGenrePosters(data.genre_posters);
+        }
+        catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
 
     const yearSelected = async (year) => {
@@ -80,8 +91,8 @@ const Recommendations = () => {
             body: JSON.stringify({ year }),
         });
         const data = await response.json();
-        setYearMovies(data[0].year_movies);
-        setYearPosters(data[1].year_posters);
+        setYearMovies(data.year_movies);
+        setYearPosters(data.year_posters);
     };
 
 
@@ -89,17 +100,18 @@ const Recommendations = () => {
     return (
         <>
             <div className="carousel-container">
-                <div id="carouselExampleIndicators" className="carousel slide" data-ride="carousel">
-                    <ol className="carousel-indicators">
+                <div id="carouselExampleIndicators" className="carousel slide" data-bs-ride="carousel">
+                    <div className="carousel-indicators">
                         {choiceIdx.map((_, index) => (
-                            <li
-                                key={index}
-                                data-target="#carouselExampleIndicators"
-                                data-slide-to={index}
-                                className={index === 0 ? 'active' : ''}
-                            ></li>
+                            <button key={index}
+                                data-bs-target="#carouselExampleIndicators"
+                                data-bs-slide-to={index}
+                                className={index === 0 ? "active" : ""}
+                                type="button"
+                            >
+                            </button>
                         ))}
-                    </ol>
+                    </div>
 
                     <div className="carousel-inner">
                         {choiceIdx.map((idx, index) => (
@@ -119,18 +131,17 @@ const Recommendations = () => {
                         ))}
                     </div>
 
-                    <a className="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+
+                    <button className="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
                         <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span className="sr-only">Previous</span>
-                    </a>
-                    <a className="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                        <span className="visually-hidden">Previous</span>
+                    </button>
+                    <button className="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
                         <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span className="sr-only">Next</span>
-                    </a>
+                        <span className="visually-hidden">Next</span>
+                    </button>
                 </div>
             </div>
-
-
 
 
 
@@ -143,7 +154,7 @@ const Recommendations = () => {
                             className="btn btn-secondary dropdown-toggle"
                             type="button"
                             id="genreDropdown"
-                            data-toggle="dropdown"
+                            data-bs-toggle="dropdown"
                             aria-haspopup="true"
                             aria-expanded="false"
                         >
@@ -164,6 +175,7 @@ const Recommendations = () => {
                     </div>
                 </div>
 
+
                 <div className="row movie-list" id="genre-row">
                     {genreMovies.slice(0, 6).map((movie, index) => (
                         <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
@@ -182,7 +194,7 @@ const Recommendations = () => {
                             className="btn btn-secondary dropdown-toggle"
                             type="button"
                             id="yearDropdown"
-                            data-toggle="dropdown"
+                            data-bs-toggle="dropdown"
                             aria-haspopup="true"
                             aria-expanded="false"
                         >
@@ -213,7 +225,7 @@ const Recommendations = () => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </div >
         </>
     )
 }
