@@ -33,3 +33,4 @@ dist-ssr
 /Backend/.idea
 /Backend/.ipynb_checkpoints
 /Backend/.env
+/Backend/annoySearch.py

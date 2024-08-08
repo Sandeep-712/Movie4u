@@ -35,7 +35,7 @@ function MovieDetail() {
 
     return (
         <div className="container-fluid">
-            <div className="row movie-box">
+            <div className="row movie-box mt-3">
                 <div className="movie-vid col-md-8 d-md-none">
                     <iframe
                         width="100%"

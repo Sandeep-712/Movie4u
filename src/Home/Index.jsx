@@ -16,7 +16,7 @@ function Index() {
 
                     <div className="right content-mail">
                         <button>
-                            <Link to='/choices' className="">Get started</Link>
+                            <Link to='/signin' className="">Get started</Link>
                             <FaChevronRight />
                         </button>
                     </div>
