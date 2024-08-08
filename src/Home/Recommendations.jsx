@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { useLocation } from "react-router-dom";
 import './Recommendation.css'
+import { Link } from "react-router-dom";
 
 const Recommendations = () => {
 
@@ -116,7 +117,7 @@ const Recommendations = () => {
                     <div className="carousel-inner">
                         {choiceIdx.map((idx, index) => (
                             <div key={index} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
-                                <a href={`/movie/${movies[idx].title}`}>
+                                <Link to={`/movie/${movies[idx]}`}>
                                     <div className="slider">
                                         <div className="slider-content">
                                             <div>
@@ -126,7 +127,7 @@ const Recommendations = () => {
                                         </div>
                                         <img src={choicePosters[index]} alt={movies[idx].title} />
                                     </div>
-                                </a>
+                                </Link>
                             </div>
                         ))}
                     </div>
@@ -179,10 +180,10 @@ const Recommendations = () => {
                 <div className="row movie-list" id="genre-row">
                     {genreMovies.slice(0, 6).map((movie, index) => (
                         <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
-                            <a href={`/movie/${movie}`}>
+                            <Link to={`/movie/${movie}`}>
                                 <img src={genrePosters[index]} className="card-img" alt={movie} />
                                 <p className="text-contain">{movie}</p>
-                            </a>
+                            </Link>
                         </div>
                     ))}
                 </div>
@@ -218,10 +219,10 @@ const Recommendations = () => {
                 <div className="row movie-list" id="year-row">
                     {yearMovies.slice(0, 6).map((movie, index) => (
                         <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
-                            <a href={`/movie/${movie}`}>
+                            <Link to={`/movie/${movie}`}>
                                 <img src={yearPosters[index]} className="card-img" alt={movie} />
                                 <p className="text-contain">{movie}</p>
-                            </a>
+                            </Link>
                         </div>
                     ))}
                 </div>

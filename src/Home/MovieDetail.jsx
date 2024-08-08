@@ -1,6 +1,37 @@
+import { useState, useEffect } from "react";
+import { useParams, Link } from 'react-router-dom';
+import "./MovieDetail.css";
 
 function MovieDetail() {
+    const { movie_name } = useParams();  // Extract movie_name from URL
+    const [movieDetails, setMovieDetails] = useState(null);
+    const [trailerKey, setTrailerKey] = useState('');
+    const [recommendations, setRecommendations] = useState([]);
 
+    useEffect(() => {
+        const fetchMovieDetails = async () => {
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/movie/${movie_name}`);
+                const data = await response.json();
+                console.log(data);
+                setMovieDetails(data.movies[data.movie_idx]);
+                setTrailerKey(data.trailer_key);
+                const combinedRecommendations = data.recommendations.map((title, index) => ({
+                    title,
+                    poster: data.posters[index]
+                }));
+                setRecommendations(combinedRecommendations);
+                
+            } catch (error) {
+                console.error("Error fetching movie details:", error);
+            }
+        };
+        fetchMovieDetails();
+    }, [movie_name]);
+
+    if (!movieDetails) {
+        return <div className="container" style={{ color: "aliceblue", fontSize: '40px', textAlign: "center", height: "45px" }}>Loading...</div>;
+    }
 
     return (
         <div className="container-fluid">
@@ -11,7 +42,6 @@ function MovieDetail() {
                         height="100%"
                         src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1&showinfo=0&controls=0&mute=1&playlist=${trailerKey}&loop=1`}
                         title="YouTube video player"
-                        frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                     ></iframe>
@@ -60,22 +90,24 @@ function MovieDetail() {
             {/* Recommendations Section */}
             <div className="container-fluid mb-3">
                 <div className="row">
-                    <h4 className="title">More Like This</h4>
+                    <h3 className="title">More Like This</h3>
                 </div>
 
                 <div className="row movie-list">
                     {recommendations.map((rec, index) => (
                         <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
-                            <a href={`/${rec.title}`}>
+                            <Link to={`/movie/${rec.title}`}>
                                 <img src={rec.poster} className="card-img" alt={rec.title} />
-                                <p className="text-contain">{rec.title}</p>
-                            </a>
+                                <p className="text-contain" style={{color:"wheat"}}>
+                                {typeof rec.title === 'string' ? rec.title : JSON.stringify(rec.title)}
+                                </p>
+                            </Link>
                         </div>
                     ))}
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default MovieDetail
+export default MovieDetail;

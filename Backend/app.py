@@ -133,26 +133,41 @@ def fetchPoster(movie_id):
 @app.route('/movie/<movie_name>')
 def movie(movie_name):
     def recommend(movie):
-        movie_index = movies[movies['title'] == movie].index[0]
+        movie_index = int(movies[movies['title'] == movie].index[0])
         distances = similarity[movie_index]
         movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:7]
 
         recommended_movies = []
         movie_posters = []
         for i in movies_list:
-            rec_movie_id = movies.iloc[i[0]].movie_id
+            rec_movie_id = int( movies.iloc[i[0]].movie_id)
             recommended_movies.append(movies.iloc[i[0]].title)
             movie_posters.append(fetchPoster(rec_movie_id))
         return recommended_movies, movie_posters
 
     selected_movie = movie_name
-    movie_idx = movies[movies['title'] == selected_movie].index[0]
-    movie_id = movies.iloc[movie_idx].movie_id
+    movie_idx = int(movies[movies['title'] == selected_movie].index[0])
+    movie_id = int(movies.iloc[movie_idx].movie_id)
     recommendations, posters = recommend(selected_movie)
     trailer_key = fetchTrailer(movie_id)
     movie_poster = fetchPoster(movie_id)
 
-    return render_template("movie.html", movie_names=movie_names, movies=movies, movie_idx=movie_idx, recommendations=recommendations, posters=posters, trailer_key=trailer_key, movie_poster=movie_poster)
+    movies_json = movies.astype(object).where(pd.notnull(movies), None).to_dict(orient='records')
+
+    combined_recommendations = [
+        {"title": rec, "poster": poster}
+        for rec, poster in zip(recommendations, posters)
+    ]
+
+
+    return jsonify({'movie_names':movie_names.tolist(),
+                    'movies':movies_json,
+                    'movie_idx':movie_idx,
+                    'recommendations':combined_recommendations, 
+                    'posters':posters, 
+                    'trailer_key':trailer_key,
+                    'movie_poster':movie_poster
+                })
 
 def byGenre(genre):
     counter = 0

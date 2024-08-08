@@ -6,6 +6,8 @@ import Index from './Home/Index';
 // import Signin from './Auth/Signin'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Recommendation from './Home/Recommendations';
+import MovieDetail from './Home/MovieDetail';
+
 
 function App() {
 
@@ -15,6 +17,7 @@ function App() {
         <Route path='/' Component={Index} />
         <Route path='/choices' Component={Choices} />
         <Route path='/recommendations' Component={Recommendation}/>
+        <Route path='/movie/:movie_name' Component={MovieDetail}/>
       </Routes>
     </Router>
   )
