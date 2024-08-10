@@ -9,6 +9,8 @@ function Signin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    // axios.defaults.withCredentials = true;
+
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -20,23 +22,25 @@ function Signin() {
                 email,
                 password
             });
-            console.log(response.data)
+            
+            console.log("====", response.data)
 
             if (isSignIn) {
-                if (response.data.message.toLowerCase() === 'recommendations') {
+                if (response.data.message === 'recommendations') {
                     navigate('/recommendations');
                 }
                 else {
-                    setError(response.data.message);
-                }
-            } else {
-                if (response.data.message.toLowerCase() === 'choices') {
-                    navigate('/choices');
-                } else {
-                    setError(response.data.message);
+                    setError(response.data.message || 'An unexpected error occurred.');
                 }
             }
-
+            else if (!isSignIn) {
+                if (response.data.message === 'choices') {
+                    navigate('/choices');
+                }
+                else {
+                    setError(response.data.message || 'An unexpected error occurred.');
+                }
+            }
         }
         catch (error) {
             console.error('Error:', error);
@@ -67,9 +71,14 @@ function Signin() {
                                 <input placeholder="Password" className="form-control mb-2" type="password" name="user_password" required value={password} onChange={(e) => setPassword(e.target.value)} />
                             </div>
 
-                            <Link to='/forget'>
-                                <button className="forget d-block mt-3 text-center">{isSignIn ? 'Forgot Password' : ''}</button>
-                            </Link>
+                            {
+                                isSignIn && (
+                                    <Link to='/forget'>
+                                        <button className="forget d-block mt-3 text-center">{isSignIn ? 'Forgot Password' : ''}</button>
+                                    </Link>
+                                )
+                            }
+
                         </div>
                         <div className="d-flex justify-content-center">
                             <button className="btn login-btn btn-primary mt-4" type="submit">{isSignIn ? 'Sign In' : 'Create Account'}</button>

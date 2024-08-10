@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from 'react-router-dom';
 import "./MovieDetail.css";
+import axios from 'axios'; 
+
 
 function MovieDetail() {
     const { movie_name } = useParams();  // Extract movie_name from URL
@@ -11,8 +13,8 @@ function MovieDetail() {
     useEffect(() => {
         const fetchMovieDetails = async () => {
             try {
-                const response = await fetch(`http://127.0.0.1:5000/movie/${movie_name}`);
-                const data = await response.json();
+                const response = await axios.get(`http://127.0.0.1:5000/movie/${movie_name}`,{withCredentials: true});
+                const data = response.data;
                 console.log(data);
                 setMovieDetails(data.movies[data.movie_idx]);
                 setTrailerKey(data.trailer_key);
@@ -21,11 +23,11 @@ function MovieDetail() {
                     poster: data.posters[index]
                 }));
                 setRecommendations(combinedRecommendations);
-                
             } catch (error) {
                 console.error("Error fetching movie details:", error);
             }
         };
+    
         fetchMovieDetails();
     }, [movie_name]);
 

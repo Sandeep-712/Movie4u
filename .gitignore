@@ -34,3 +34,4 @@ dist-ssr
 /Backend/.ipynb_checkpoints
 /Backend/.env
 /Backend/annoySearch.py
+/Backend/__pycache__

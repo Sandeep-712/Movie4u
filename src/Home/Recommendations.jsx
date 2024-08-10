@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import './Recommendation.css'
+import './Recommendation.css';
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Recommendations = () => {
-
     const [genreMovies, setGenreMovies] = useState([]);
     const [genrePosters, setGenrePosters] = useState([]);
     const [yearMovies, setYearMovies] = useState([]);
@@ -12,30 +12,28 @@ const Recommendations = () => {
     const [choiceIdx, setChoiceIdx] = useState([]);
     const [choicePosters, setChoicePosters] = useState([]);
     const [movies, setMovies] = useState([]);
+    const [result, setResult] = useState([]);
     const location = useLocation();
 
     const [selectedGenre, setSelectedGenre] = useState('Action');
     const [selectedYear, setSelectedYear] = useState('2016');
 
-
-
     const genreList = useMemo(() => location.state?.genreList, [location.state]);
     const castList = useMemo(() => location.state?.castList, [location.state]);
-
 
     useEffect(() => {
         const fetchRecommendations = async () => {
             const url = 'http://127.0.0.1:5000/recommendations';
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ genreList, castList }),
-            });
+            try {
+                const response = await axios.post(url, { genreList, castList }, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    withCredentials: true,
+                });
 
-            if (response.ok) {
-                const data = await response.json();
+                const data = response.data;
+                console.log(data);
                 setGenreMovies(data.genre_movies);
                 setGenrePosters(data.genre_posters);
                 setYearMovies(data.year_movies);
@@ -43,9 +41,10 @@ const Recommendations = () => {
                 setChoiceIdx(data.choice_idx);
                 setChoicePosters(data.choice_posters);
                 setMovies(data.movie_names);
-                console.log(data);
-            } else {
-                console.error('Failed to fetch recommendations');
+                setResult(data.movies_result);
+                // console.log(result[227][2]);
+            } catch (error) {
+                console.error('Failed to fetch recommendations', error);
             }
         };
 
@@ -56,47 +55,47 @@ const Recommendations = () => {
     const years = ['2016', '2015', '2014', '2013', '2012'];
 
     const genreSelected = async (genre) => {
+        
         setSelectedGenre(genre);
         const url = 'http://127.0.0.1:5000/getByGenre';
         try {
-            const response = await fetch(url, {
-                method: 'POST',
+            const response = await axios.post(url, { genre }, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ genre }),
+                withCredentials: true,
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to fetch data');
-            }
-
-            const data = await response.json();
-            console.log(data);
-            setGenreMovies(data.genre_movies);
-            setGenrePosters(data.genre_posters);
-        }
-        catch (error) {
+            const data = response.data;
+            setGenreMovies(data[0].genre_movies || []);
+            setGenrePosters(data[1].genre_posters || []);
+            console.log(genreMovies)
+        } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
 
     const yearSelected = async (year) => {
+        
         setSelectedYear(year);
         const url = "http://127.0.0.1:5000/getByYear";
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ year }),
-        });
-        const data = await response.json();
-        setYearMovies(data.year_movies);
-        setYearPosters(data.year_posters);
+        try {
+            const response = await axios.post(url, { year }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                withCredentials: true,
+            });
+
+            const data = response.data;
+            setYearMovies(data[0].year_movies || []);
+            setYearPosters(data[1].year_posters || []);
+            console.log('Year Movies:', yearMovies);
+            console.log('Year Posters:', yearPosters);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
-
-
 
     return (
         <>
@@ -117,21 +116,20 @@ const Recommendations = () => {
                     <div className="carousel-inner">
                         {choiceIdx.map((idx, index) => (
                             <div key={index} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
-                                <Link to={`/movie/${movies[idx]}`}>
+                                <Link to={`/movie/${result[idx][2]}`}>
                                     <div className="slider">
                                         <div className="slider-content">
                                             <div>
-                                                <h1 className="movie-title">{movies[idx].title}</h1>
-                                                {movies[idx].overview && <p className="movie-des">{movies[idx].overview}</p>}
+                                                <h1 className="movie-title">{result[idx][2]}</h1>
+                                                {result[idx][4] && <p className="movie-des">{result[idx][4]}</p>}
                                             </div>
                                         </div>
-                                        <img src={choicePosters[index]} alt={movies[idx].title} />
+                                        <img src={choicePosters[index]} alt={movies[idx]} />
                                     </div>
                                 </Link>
                             </div>
                         ))}
                     </div>
-
 
                     <button className="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
                         <span className="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -143,9 +141,6 @@ const Recommendations = () => {
                     </button>
                 </div>
             </div>
-
-
-
 
             <div className="container-fluid mb-3">
                 <div className="row mb-2">
@@ -167,7 +162,10 @@ const Recommendations = () => {
                                     className="dropdown-item"
                                     href="#"
                                     key={genre}
-                                    onClick={() => genreSelected(genre)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        genreSelected(genre)
+                                    }}
                                 >
                                     {genre}
                                 </a>
@@ -176,9 +174,8 @@ const Recommendations = () => {
                     </div>
                 </div>
 
-
                 <div className="row movie-list" id="genre-row">
-                    {genreMovies.slice(0, 6).map((movie, index) => (
+                    {genreMovies && genreMovies.slice(0, 6).map((movie, index) => (
                         <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
                             <Link to={`/movie/${movie}`}>
                                 <img src={genrePosters[index]} className="card-img" alt={movie} />
@@ -207,7 +204,10 @@ const Recommendations = () => {
                                     className="dropdown-item"
                                     href="#"
                                     key={year}
-                                    onClick={() => yearSelected(year)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        yearSelected(year)
+                                    }}
                                 >
                                     {year}
                                 </a>
@@ -216,8 +216,8 @@ const Recommendations = () => {
                     </div>
                 </div>
 
-                <div className="row movie-list" id="year-row">
-                    {yearMovies.slice(0, 6).map((movie, index) => (
+                <div className="row movie-list" >
+                    {yearMovies.length > 0 && yearMovies.slice(0, 6).map((movie, index) => (
                         <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
                             <Link to={`/movie/${movie}`}>
                                 <img src={yearPosters[index]} className="card-img" alt={movie} />
@@ -226,9 +226,9 @@ const Recommendations = () => {
                         </div>
                     ))}
                 </div>
-            </div >
+            </div>
         </>
-    )
-}
+    );
+};
 
 export default Recommendations;

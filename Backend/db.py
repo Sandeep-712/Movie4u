@@ -1,13 +1,8 @@
-import mysql.connector
+import sqlite3
 
 try:
-    # Establish a connection to the MySQL database
-    conn = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='123456789',
-        database='users'
-    )
+    # Establish a connection to the SQLite database
+    conn = sqlite3.connect('./model/users.sqlite')
 
     # Create a cursor object
     sql_comm = conn.cursor()
@@ -15,9 +10,9 @@ try:
     # SQL query to create the 'users' table if it does not exist
     sql_query = """
     CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(255) NOT NULL,
-        password VARCHAR(255) NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL,
+        password TEXT NOT NULL,
         selected_genres TEXT,
         selected_cast TEXT
     )
@@ -31,8 +26,8 @@ try:
 
     print("Table 'users' created successfully.")
 
-except mysql.connector.Error as err:
-    print(f"Error: {err}")
+except sqlite3.Error as e:
+    print(f"Error: {e}")
 
 finally:
     # Close the cursor and connection
