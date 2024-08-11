@@ -25,7 +25,7 @@ dist-ssr
 *.sw?
 
 
-
+/Backend/.env
 /Backend/myenv
 /Backend/__pycache__
 /Backend/*.pyc
