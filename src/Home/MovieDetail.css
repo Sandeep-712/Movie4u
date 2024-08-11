@@ -1,4 +1,7 @@
 .movie-box {
+    display: flex;
+    flex-direction: row;
+    flex-wrap:row wrap;
     color: #fff;
     min-height: 60vh;
     margin: 50px;
@@ -17,14 +20,14 @@
     border-radius: 1%;
     box-shadow: inset 15vw -11px 72px 31px rgb(0 0 0 / 80%);
     -webkit-box-shadow: 15vw -11px 72px 31px rgb(0 0 0 / 80%) inset;
-    -moz-box-shadow: 15vw -11px 72px 31px rgba(0, 0, 0, .80) inset;
+    -moz-box-shadow: 15vw -11px 72px 31px rgba(0,0,0,.80) inset;
 }
 
 .movie-text {
-    display: -webkit-flex;
     display: flex;
-    -webkit-align-items: center;
     align-items: center;
+    flex: 1;
+    padding: 20px;
 }
 
 .text-wrapper {
@@ -52,17 +55,3 @@
 .movie-card p {
     color: #fff;
 }
-
-/* .movie-list {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.movie-card {
-    margin: 10px;
-}
-
-.card-img {
-    width: 100%;
-    height: auto;
-} */

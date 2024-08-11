@@ -9,6 +9,7 @@ import sqlite3
 from flask_mail import Mail, Message
 from random import randint
 from flask_cors import CORS
+from annoy import AnnoyIndex
 
 
 app = Flask(__name__)
@@ -202,7 +203,7 @@ def recommendations():
         results = cursor.fetchall()
 
         # sign-in
-        if len(results) != 0:
+        if results and results[0] and results[0][0] and results[0][1]:
             selected_genres = list(results[0][0].split("$"))
             selected_cast = list(results[0][1].split("$"))
         else:
@@ -257,15 +258,15 @@ def recommendations():
 # Movie page
 @app.route('/movie/<movie_name>')
 def movie(movie_name):
-
     if "user" in session:
         def recommend(movie):
             for row in movies_result:
                 if row[2] == movie:
                     movie_index = row[0]
                     break
-            distances = movies_result[movie_index]
-            movies_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:7]
+            u = AnnoyIndex(5000, 'angular')
+            u.load('./model/vectors.ann')
+            movies_list = (u.get_nns_by_item(movie_index, 7))[1:7] 
 
             recommended_movies = []
             movie_posters = []
@@ -285,12 +286,12 @@ def movie(movie_name):
         trailer_key = fetchTrailer(movie_id, movies_result)
         movie_poster = fetchPoster(movie_id, movies_result)
 
-        movies_json = movies_result.astype(object).where(pd.notnull(movies_result), None).to_dict(orient='records')
+        # movies_json = movies_result.astype(object).where(pd.notnull(movies_result), None).to_dict(orient='records')
 
-        combined_recommendations = [
-            {"title": rec, "poster": poster}
-            for rec, poster in zip(recommendations, posters)
-        ]
+        # combined_recommendations = [
+        #     {"title": rec, "poster": poster}
+        #     for rec, poster in zip(recommendations, posters)
+        # ]
 
         mov_genre = []
         mov_cast = []
@@ -300,19 +301,20 @@ def movie(movie_name):
             mc = list(row[7].split("$"))
             mov_cast.append(mc)
 
-        return jsonify({'movie_names':movie_names.tolist(),
-                    'movies':movies_json,
-                    'movie_idx':movie_idx,
-                    'recommendations':combined_recommendations, 
-                    'posters':posters, 
-                    'trailer_key':trailer_key,
-                    'movie_poster':movie_poster,
-                    'mov_genre':mov_genre,
-                    'mov_cast':mov_cast
-                })
+        return jsonify({
+            'movie_names': movie_names,
+            'movies': movies_result,
+            'movie_idx': movie_idx,
+            'recommendations': recommendations,
+            'posters': posters,
+            'trailer_key': trailer_key,
+            'movie_poster': movie_poster,
+            'mov_genre': mov_genre,
+            'mov_cast': mov_cast
+        })
     else:
         print("Session not found")
-        return jsonify({"message":"Session not found"})
+        return jsonify({"message": "Session not found"})
 
 
 otp = ""

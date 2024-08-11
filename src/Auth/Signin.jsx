@@ -9,7 +9,6 @@ function Signin() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
-    // axios.defaults.withCredentials = true;
 
 
     const handleSubmit = async (event) => {
@@ -18,10 +17,10 @@ function Signin() {
         try {
             const url = isSignIn ? 'http://127.0.0.1:5000/signin' : 'http://127.0.0.1:5000/signup';
 
-            const response = await axios.post(url, {
+            const response = await axios.post(url,{
                 email,
                 password
-            });
+            },{withCredentials: true});
             
             console.log("====", response.data)
 
