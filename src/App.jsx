@@ -7,12 +7,14 @@ import Signin from './Auth/Signin'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Recommendation from './Home/Recommendations';
 import MovieDetail from './Home/MovieDetail';
+import Navbar from './Home/Navbar';
 
 
 function App() {
 
   return (
     <Router>
+      <Navbar/>
       <Routes>
         <Route path='/' Component={Index} />
         <Route path='/choices' Component={Choices} />

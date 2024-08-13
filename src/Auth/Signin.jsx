@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./Signin.css"
 import axios from 'axios';
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Signin() {
     const [isSignIn, setIsSignIn] = useState(true);
@@ -17,12 +17,13 @@ function Signin() {
         try {
             const url = isSignIn ? 'http://127.0.0.1:5000/signin' : 'http://127.0.0.1:5000/signup';
 
-            const response = await axios.post(url,{
+            const response = await axios.post(url, {
                 email,
                 password
-            },{withCredentials: true});
+            }, { withCredentials: true });
             
-            console.log("====", response.data)
+            console.log()
+            console.log("Response from backend", response.data)
 
             if (isSignIn) {
                 if (response.data.message === 'recommendations') {
@@ -70,13 +71,13 @@ function Signin() {
                                 <input placeholder="Password" className="form-control mb-2" type="password" name="user_password" required value={password} onChange={(e) => setPassword(e.target.value)} />
                             </div>
 
-                            {
+                            {/* {
                                 isSignIn && (
                                     <Link to='/forget'>
                                         <button className="forget d-block mt-3 text-center">{isSignIn ? 'Forgot Password' : ''}</button>
                                     </Link>
                                 )
-                            }
+                            } */}
 
                         </div>
                         <div className="d-flex justify-content-center">

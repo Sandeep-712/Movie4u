@@ -10,18 +10,27 @@ from flask_mail import Mail, Message
 from random import randint
 from flask_cors import CORS
 from annoy import AnnoyIndex
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
 
 
 app = Flask(__name__)
-CORS(app,supports_credentials=True,origins=["http://localhost:5173"])
+CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 app.secret_key = "*&adfcd^secret key"
 
+
+# Configure the session cookie with SameSite=Lax
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True  # Set to True if you're using HTTPS
 
 # Flask mail configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = "muskanno@gmail.com"
-app.config['MAIL_PASSWORD'] = "sandeep123456@#"
+app.config['MAIL_USERNAME'] = os.getenv("email")
+app.config['MAIL_PASSWORD'] = os.getenv("pass")
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
@@ -68,10 +77,11 @@ def signup():
         if len(results) != 0:
             response = "This email is already registered. Please sign-in."
         else:
-            insert_query = "INSERT INTO users (email, password) VALUES (?, ?)"
-            cursor.execute(insert_query, (signup_email, signup_password))
-            conn.commit()  # Commit the transaction
+            # insert_query = "INSERT INTO users (email, password) VALUES (?, ?)"
+            # cursor.execute(insert_query, (signup_email, signup_password))
+            # conn.commit()  # Commit the transaction
             session["user"] = signup_email
+            print("signup  :-",session)
             session["choices"] = 0
             response = "choices"
             
@@ -112,13 +122,20 @@ def signin():
 
     return jsonify({"message": response})
 
+@app.route('/check_signin', methods=['GET'])
+def check_signin():
+    if 'user' in session:
+        return jsonify({"isSignedIn": True, "user": session["user"]})
+    else:
+        return jsonify({"isSignedIn": False})
+
 
 # Choices page
 @app.route('/choices', methods=['GET','POST'])
 def choices():
     global signup_email
     global movies_result
-    print(f"Session data: {session}")
+    print(f"Choice Session data: {session}")
  
 
     if 'user' in session:
@@ -286,12 +303,6 @@ def movie(movie_name):
         trailer_key = fetchTrailer(movie_id, movies_result)
         movie_poster = fetchPoster(movie_id, movies_result)
 
-        # movies_json = movies_result.astype(object).where(pd.notnull(movies_result), None).to_dict(orient='records')
-
-        # combined_recommendations = [
-        #     {"title": rec, "poster": poster}
-        #     for rec, poster in zip(recommendations, posters)
-        # ]
 
         mov_genre = []
         mov_cast = []
@@ -316,78 +327,81 @@ def movie(movie_name):
         print("Session not found")
         return jsonify({"message": "Session not found"})
 
-
-otp = ""
-# Forgot page
-@app.route('/forgot', methods=['POST', 'GET'])
-def forgot():
-    global signin_email
-    global otp
-
-    if request.method == 'POST':
-        conn = db_connection("users")
-        cursor = conn.cursor()
-
-        signin_email = request.get_json().get('email')
-
-        sql_query = "SELECT email FROM users WHERE email = ?"
-        cursor.execute(sql_query,(signin_email,))
-        results = cursor.fetchall()
-        conn.close()
-
-        if len(results) == 0:
-            response = "This email is not registered. <br> Please sign-up first."
-        else:
-            response = "forgot"
-
-    if response == "forgot":
-        range_start = 10**(6-1)
-        range_end = (10**6)-1
-        otp = randint(range_start, range_end)
-        message = Message("NEW3 OTP for password reset", sender="kashishahuja2002@gmail.com", recipients=[signin_email])
-        message.body = "OTP: "+str(otp)
-        mail.send(message)
-
-    return response
-
-
-# reset page
-@app.route('/reset', methods=['GET','POST'])
-def reset():
-    global otp
-
-    if request.method == 'POST':
-        num=request.get_json().get('otp')
-        if str(num) == str(otp):
-            response = "valid"
-        else:
-            response = "OTP entered is incorrect"
-
-    return response
-
-
-# change password in database
-@app.route('/change', methods=['GET','POST'])
-def change():
-    global signin_email
-    if request.method == 'POST':
-        newPass = request.get_json().get('password')
-        conn = db_connection("users")
-        cursor = conn.cursor()
-        sql_query = "UPDATE users SET password = ? WHERE email = ?"
-        cursor.execute(sql_query,(signup_password,signin_email))
-        conn.commit()
-        conn.close()
-        session["user"] = signin_email
-
-    return "recommendations"
-
-
 # Logout
 @app.route('/logout')
 def logout():
     session.pop("user", None)
-    return redirect(url_for("index"))
+    return jsonify({"message": "Logout successful"})
+
+
+
+# otp = ""
+# # Forgot page
+# @app.route('/forgot', methods=['POST', 'GET'])
+# def forgot():
+#     global signin_email
+#     global otp
+
+#     if request.method == 'POST':
+#         conn = db_connection("users")
+#         cursor = conn.cursor()
+
+#         signin_email = request.get_json().get('email')
+
+#         sql_query = "SELECT email FROM users WHERE email = ?"
+#         cursor.execute(sql_query,(signin_email,))
+#         results = cursor.fetchall()
+#         conn.close()
+
+#         if len(results) == 0:
+#             response = "This email is not registered. <br> Please sign-up first."
+#         else:
+#             response = "forgot"
+
+#     if response == "forgot":
+#         range_start = 10**(6-1)
+#         range_end = (10**6)-1
+#         otp = randint(range_start, range_end)
+#         message = Message("NEW3 OTP for password reset", sender=os.getenv("email"), recipients=[signin_email])
+#         message.body = "OTP: "+str(otp)
+#         mail.send(message)
+
+#     return response
+
+
+# # reset page
+# @app.route('/reset', methods=['GET','POST'])
+# def reset():
+#     global otp
+
+#     if request.method == 'POST':
+#         num=request.get_json().get('otp')
+#         if str(num) == str(otp):
+#             response = "valid"
+#         else:
+#             response = "OTP entered is incorrect"
+
+#     return response
+
+
+# # change password in database
+# @app.route('/change', methods=['GET','POST'])
+# def change():
+#     global signin_email
+#     if request.method == 'POST':
+#         newPass = request.get_json().get('password')
+#         conn = db_connection("users")
+#         cursor = conn.cursor()
+#         sql_query = "UPDATE users SET password = ? WHERE email = ?"
+#         cursor.execute(sql_query,(newPass,signin_email))
+#         conn.commit()
+#         conn.close()
+#         session["user"] = signin_email
+#         session["choices"] = 1
+
+#     return "recommendations"
+
+
 
 
 if __name__ == "__main__":

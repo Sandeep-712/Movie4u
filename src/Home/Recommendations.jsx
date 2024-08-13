@@ -125,6 +125,7 @@ const Recommendations = () => {
                                                         <h1 className="movie-title">{result[idx][2]}</h1>
                                                         {result[idx][4] && <p className="movie-des">{result[idx][4]}</p>}
                                                     </div>
+                                                <button className="slider-btn btn" >Watch Now</button>
                                                 </div>
                                                 <img src={choicePosters[index]} alt={movies[idx]} />
                                             </div>
@@ -144,10 +145,10 @@ const Recommendations = () => {
                         </div>
                     </div>
 
-                    <div className="container-fluid mb-3">
-                        <div className="row mb-2">
-                            <h4 className="title">Genre</h4>
-                            <div className="dropdown ml-3">
+                    <div className="container-fluid mb-2">
+                        <div className=" d-flex align-items-center">
+                            <h4 className="title">Genre&apos;s</h4>
+                            <div className="dropdown mx-3">
                                 <button
                                     className="btn btn-secondary dropdown-toggle"
                                     type="button"
@@ -181,52 +182,54 @@ const Recommendations = () => {
                                 <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
                                     <Link to={`/movie/${movie}`}>
                                         <img src={genrePosters[index]} className="card-img" alt={movie} />
-                                        <p className="text-contain">{movie}</p>
+                                        <p className="text-link">{movie}</p>
                                     </Link>
                                 </div>
                             ))}
                         </div>
 
                         <div className="row mb-2 mt-3">
-                            <h4 className="title">Best of year</h4>
-                            <div className="dropdown ml-3">
-                                <button
-                                    className="btn btn-secondary dropdown-toggle"
-                                    type="button"
-                                    id="yearDropdown"
-                                    data-bs-toggle="dropdown"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
-                                >
-                                    {selectedYear}
-                                </button>
-                                <div className="dropdown-menu" aria-labelledby="yearDropdown">
-                                    {years.map((year) => (
-                                        <a
-                                            className="dropdown-item"
-                                            href="#"
-                                            key={year}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                yearSelected(year)
-                                            }}
-                                        >
-                                            {year}
-                                        </a>
-                                    ))}
+                            <div className=" d-flex align-items-center">
+                                <h4 className="title">Best of year</h4>
+                                <div className="dropdown mx-3">
+                                    <button
+                                        className="btn btn-secondary dropdown-toggle"
+                                        type="button"
+                                        id="yearDropdown"
+                                        data-bs-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                    >
+                                        {selectedYear}
+                                    </button>
+                                    <div className="dropdown-menu" aria-labelledby="yearDropdown">
+                                        {years.map((year) => (
+                                            <a
+                                                className="dropdown-item"
+                                                href="#"
+                                                key={year}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    yearSelected(year)
+                                                }}
+                                            >
+                                                {year}
+                                            </a>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="row movie-list" >
-                            {yearMovies.length > 0 && yearMovies.slice(0, 6).map((movie, index) => (
-                                <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
-                                    <Link to={`/movie/${movie}`}>
-                                        <img src={yearPosters[index]} className="card-img" alt={movie} />
-                                        <p className="text-contain">{movie}</p>
-                                    </Link>
-                                </div>
-                            ))}
+                            <div className="row movie-list" >
+                                {yearMovies.length > 0 && yearMovies.slice(0, 6).map((movie, index) => (
+                                    <div className="col-6 col-sm-4 col-md-2 movie-card" key={index}>
+                                        <Link to={`/movie/${movie}`}>
+                                            <img src={yearPosters[index]} className="card-img" alt={movie} />
+                                            <p className="text-link">{movie}</p>
+                                        </Link>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
